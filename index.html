@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Каталог списков splify2</title>
+<style>
+  :root {
+    --bg: #0f0f12;
+    --fg: #e8e8ea;
+    --muted: #8b8b93;
+    --line: #26262c;
+    --card: #17171c;
+    --accent: #a897ff;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fafafa;
+      --fg: #1a1a1c;
+      --muted: #6b6b73;
+      --line: #e3e3e6;
+      --card: #fff;
+      --accent: #6d5ce7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  h2 {
+    font-size: 1.05rem;
+    margin: 2.5rem 0 .75rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .meta { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+  .meta code { background: var(--card); padding: .1em .35em; border-radius: 4px; }
+  .urlbox {
+    display: flex;
+    gap: .5rem;
+    margin: 1rem 0 0;
+  }
+  .urlbox input {
+    flex: 1;
+    background: var(--card);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .55rem .7rem;
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .urlbox button {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 0 1rem;
+    font: inherit;
+    cursor: pointer;
+  }
+  .urlbox button:hover { opacity: .9; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .7rem .9rem;
+    margin-bottom: .5rem;
+  }
+  .row { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+  .name { font-weight: 600; }
+  .badge {
+    font-size: .72rem;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: .05em .5em;
+  }
+  .badge.on { color: var(--accent); border-color: var(--accent); }
+  .id {
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .desc { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+  .src { color: var(--muted); font-size: .78rem; margin-top: .35rem; }
+  .src a { color: var(--muted); }
+  .err { color: #e5484d; }
+  .empty { color: var(--muted); padding: 1rem 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Каталог списков splify2</h1>
+  <p class="meta" id="meta">Загрузка…</p>
+
+  <div class="urlbox">
+    <input id="url" readonly>
+    <button id="copy">Скопировать</button>
+  </div>
+
+  <h2>Подсети <span id="n-cat"></span></h2>
+  <ul id="cat"></ul>
+
+  <h2>Домены <span id="n-dom"></span></h2>
+  <ul id="dom"></ul>
+</main>
+
+<script>
+const MANIFEST = 'lists.json';
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function item(e) {
+  const li = el('li');
+  const row = el('div', 'row');
+  row.append(el('span', 'name', e.name_ru || e.id));
+  if (e.default_on) row.append(el('span', 'badge on', 'включён'));
+  if (e.format === 'srs') row.append(el('span', 'badge', 'srs'));
+  if (e.count != null) row.append(el('span', 'badge', e.count + ' записей'));
+  row.append(el('span', 'id', e.id));
+  li.append(row);
+
+  if (e.description_ru) li.append(el('div', 'desc', e.description_ru));
+
+  const src = [];
+  if (e.source_name) src.push(e.source_name);
+  if (e.tag) src.push('тег ' + e.tag);
+  if (e.file) src.push(e.file);
+  if (src.length) {
+    const d = el('div', 'src');
+    d.textContent = src.join(' · ');
+    li.append(d);
+  }
+  return li;
+}
+
+function fill(ul, items) {
+  ul.replaceChildren();
+  if (!items || !items.length) {
+    ul.append(el('li', 'empty', 'пусто'));
+    return;
+  }
+  for (const e of items) ul.append(item(e));
+}
+
+async function main() {
+  const meta = document.getElementById('meta');
+  try {
+    const r = await fetch(MANIFEST + '?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+
+    meta.replaceChildren();
+    meta.append(
+      document.createTextNode('Версия '),
+      el('code', null, d.version || '?'),
+      document.createTextNode(' · собрано ' + (d.generated_at || '?')),
+    );
+
+    document.getElementById('url').value =
+      new URL(MANIFEST, location.href).href;
+
+    const cat = d.categories || [];
+    const dom = d.domain_lists || [];
+    document.getElementById('n-cat').textContent = '· ' + cat.length;
+    document.getElementById('n-dom').textContent = '· ' + dom.length;
+    fill(document.getElementById('cat'), cat);
+    fill(document.getElementById('dom'), dom);
+  } catch (e) {
+    meta.replaceChildren(el('span', 'err', 'Не удалось прочитать lists.json: ' + e.message));
+  }
+}
+
+document.getElementById('copy').addEventListener('click', async (ev) => {
+  const input = document.getElementById('url');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    const b = ev.currentTarget;
+    const t = b.textContent;
+    b.textContent = 'Скопировано';
+    setTimeout(() => { b.textContent = t; }, 1200);
+  } catch {}
+});
+
+main();
+</script>
+</body>
+</html>

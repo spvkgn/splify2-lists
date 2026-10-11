@@ -1,0 +1,59 @@
+# Как список называется по-человечески. Одна строка — одно имя:
+#
+#     идентификатор | Название
+#
+# Идентификатор — тот же, что в lists.json: `приставка:имя` для чужого набора (приставка
+# задаётся в sources.txt) или просто `имя`, если правило про любой источник. Для СВОИХ
+# списков имя берётся из шапки самого файла (`# name:`), и сюда его писать не нужно.
+#
+# ЗАЧЕМ ОТДЕЛЬНЫМ ФАЙЛОМ. Состав наборов у издателей меняется чаще, чем код вокруг них:
+# добавить перевод названия — это правка данных, а не программы. Чего здесь нет, то
+# называется именем файла набора — и это честно: придумывать перевод за издателя мы не
+# вправе, а английское имя человек узнает.
+
+# itdoginfo/allow-domains
+itdoginfo:anime | Аниме
+itdoginfo:block | Заблокированное в РФ
+itdoginfo:cloudflare | Cloudflare
+itdoginfo:cloudfront | Amazon CloudFront
+itdoginfo:digitalocean | DigitalOcean
+itdoginfo:discord | Discord
+itdoginfo:geoblock | Геоблокировка (не пускают из РФ)
+itdoginfo:google_ai | Google AI
+itdoginfo:google_meet | Google Meet
+itdoginfo:google_play | Google Play
+itdoginfo:hdrezka | HDRezka
+itdoginfo:hetzner | Hetzner
+itdoginfo:hodca | H.O.D.C.A (Hetzner, OVH, DigitalOcean, Cloudflare, AWS, Akamai)
+itdoginfo:meta | Meta (Facebook, Instagram)
+itdoginfo:news | Новости
+itdoginfo:ovh | OVH
+itdoginfo:porn | Взрослое
+itdoginfo:roblox | Roblox
+itdoginfo:russia_inside | Россия: изнутри (сборный)
+itdoginfo:russia_outside | Россия: снаружи (сборный)
+itdoginfo:telegram | Telegram
+itdoginfo:tiktok | TikTok
+itdoginfo:twitter | Twitter (X)
+itdoginfo:ukraine_inside | Украина: заблокированное
+itdoginfo:youtube | YouTube
+
+# Greeg0ry/b4geoip-forkop — игры и сервисы
+b4geoip:adobe | Adobe
+b4geoip:anthropic | Anthropic (Claude)
+b4geoip:apple | Apple
+b4geoip:blizzard | Blizzard
+b4geoip:bungie | Bungie (Destiny)
+b4geoip:ccp | CCP (EVE Online)
+b4geoip:electronicarts | Electronic Arts
+b4geoip:epicgames | Epic Games
+b4geoip:google | Google
+b4geoip:nintendo | Nintendo
+b4geoip:play2go | Play2Go
+b4geoip:riot | Riot Games
+b4geoip:sony | Sony (PlayStation)
+b4geoip:taketwo | Take-Two (Rockstar)
+b4geoip:ubisoft | Ubisoft
+b4geoip:valve | Valve (Steam)
+b4geoip:wargaming | Wargaming
+b4geoip:xbox | Xbox

@@ -1,0 +1,78 @@
+name: lists
+
+on:
+  # schedule:
+  #   - cron: '17 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lists/**'
+      - 'sources.txt'
+      - 'build.py'
+      - '.github/workflows/lists.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lists
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Достать прежний lists.json из gh-pages
+        run: |
+          if git fetch --depth=1 origin gh-pages 2>/dev/null; then
+            git show FETCH_HEAD:lists.json > lists.json 2>/dev/null || true
+          fi
+          if [ -s lists.json ]; then
+            echo "прежний lists.json: $(python3 -c 'import json;print(json.load(open("lists.json"))["version"])')"
+          else
+            echo "прежнего lists.json нет — первая сборка"
+            rm -f lists.json
+          fi
+
+      - name: Собрать lists.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 build.py
+
+      - name: Что изменилось
+        id: diff
+        run: |
+          # build.py не тронул файл → git status чист (lists.json не отслеживается)
+          if [ -z "$(git status --porcelain -- lists.json)" ]; then
+            echo "changed=no" >> "$GITHUB_OUTPUT"
+            echo "изменений нет — ни деплоя, ни релиза"
+          else
+            echo "changed=yes" >> "$GITHUB_OUTPUT"
+            git status --short -- lists.json
+          fi
+
+      - name: Собрать каталог для gh-pages
+        if: steps.diff.outputs.changed == 'yes'
+        run: |
+          mkdir -p _publish
+          cp lists.json index.html _publish/
+
+      - name: Узнать версию
+        if: steps.diff.outputs.changed == 'yes'
+        id: version
+        run: |
+          echo "version=$(python3 -c 'import json;print(json.load(open("lists.json"))["version"])')" >> "$GITHUB_OUTPUT"
+
+      - name: Деплой в gh-pages
+        if: steps.diff.outputs.changed == 'yes'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_publish
+          publish_branch: gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+          commit_message: "Списки: ${{ steps.version.outputs.version }}"
